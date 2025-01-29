@@ -15,9 +15,13 @@ public partial class CellHighlight : Sprite2D
 
 	public void SelectCell(Vector2I cell)
 	{
-		Sprite2D highlight = new();
-		highlight.Texture = Texture;
-		highlight.Position = ConvertFromCell(cell);
+		GD.Print("Selecting:", cell);
+		Sprite2D highlight = new()
+		{
+			Texture = Texture,
+			Position = ConvertFromCell(cell)
+		};
+		AddChild(highlight);
 		children.Add(cell, highlight);
 	}
 
@@ -30,7 +34,8 @@ public partial class CellHighlight : Sprite2D
 	{
 		foreach (KeyValuePair<Vector2I, Sprite2D> cell in children)
 		{
-			DeselectCell(cell.Key);
+			GD.Print(cell.Value.Position);
+			// DeselectCell(cell.Key);
 		}
 	}
 }

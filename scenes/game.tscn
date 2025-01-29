@@ -22,7 +22,7 @@ scale = Vector2(7, 7)
 texture = ExtResource("1_kyhhr")
 
 [node name="CellHighlight" type="Sprite2D" parent="."]
-position = Vector2(-84, -77)
+position = Vector2(2.08165e-12, 2.08165e-12)
 scale = Vector2(1.75, 1.75)
 texture = SubResource("GradientTexture2D_uo4ek")
 script = ExtResource("3_fpsne")
