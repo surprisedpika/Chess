@@ -5,21 +5,26 @@ public partial class game : Node2D
 	public const int Minimum = 50;
 	public const int Maximum = 950;
 	private CellHighlight highlighter;
+	private Vector2I previousMouseCell;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		highlighter = (CellHighlight)FindChild("CellHighlight", false);
-		for (int i = 0; i < 8; i++)
-		{
-			highlighter.SelectCell(new(i, i));
-		}
-		highlighter.DeselectAllCells();
+		previousMouseCell = new(-1, -1);
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
+		Vector2I currentMouseCell = ConvertToCell(GetViewport().GetMousePosition());
+		if (currentMouseCell.Equals(previousMouseCell))
+		{
+			return;
+		}
+		highlighter.DeselectCell(previousMouseCell);
+		highlighter.SelectCell(currentMouseCell);
+		previousMouseCell = currentMouseCell;
 	}
 
 	public static Vector2I ConvertToCell(Vector2 pos)
@@ -41,13 +46,14 @@ public partial class game : Node2D
 	{
 		static float unmapValue(int x)
 		{
-			// I have NO IDEA why a) I need these numbers b) why they are the values that they are 
-			float magicNumberOne = 4 / 7;
-			int magicNumberTwo = 12;
+			// Square highlight is scaled by a factor of 1.75
+			float scalingFactor = 1f / 1.75f;
+			// I have NO IDEA why I need this number or why it is 12
+			int magicNumber = 12;
 
 			float cellSize = (Maximum - Minimum) / 8;
-			float a = x * cellSize * magicNumberOne;
-			return a + Minimum + magicNumberTwo;
+			float a = x * cellSize * scalingFactor;
+			return a + Minimum + magicNumber;
 		}
 
 		return new Vector2(unmapValue(cell.X), unmapValue(cell.Y));

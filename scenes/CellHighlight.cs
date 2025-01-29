@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Godot;
 using static game;
@@ -15,11 +14,11 @@ public partial class CellHighlight : Sprite2D
 
 	public void SelectCell(Vector2I cell)
 	{
-		GD.Print("Selecting:", cell);
 		Sprite2D highlight = new()
 		{
 			Texture = Texture,
-			Position = ConvertFromCell(cell)
+			Position = ConvertFromCell(cell),
+			ZIndex = 10
 		};
 		AddChild(highlight);
 		children.Add(cell, highlight);
@@ -27,15 +26,23 @@ public partial class CellHighlight : Sprite2D
 
 	public bool DeselectCell(Vector2I cell)
 	{
-		throw new NotImplementedException();
+		if (children.TryGetValue(cell, out Sprite2D instance))
+		{
+			children.Remove(cell);
+			instance.QueueFree();
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	public void DeselectAllCells()
 	{
 		foreach (KeyValuePair<Vector2I, Sprite2D> cell in children)
 		{
-			GD.Print(cell.Value.Position);
-			// DeselectCell(cell.Key);
+			DeselectCell(cell.Key);
 		}
 	}
 }
