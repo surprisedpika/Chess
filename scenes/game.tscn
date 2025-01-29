@@ -1,0 +1,28 @@
+[gd_scene load_steps=6 format=3 uid="uid://bjdv62785qn54"]
+
+[ext_resource type="Texture2D" uid="uid://nojh6vq5vc5s" path="res://assets/pixel chess_v1.2/boards/board_plain_04.png" id="1_kyhhr"]
+[ext_resource type="Script" path="res://scenes/game.cs" id="1_wj6df"]
+[ext_resource type="Script" path="res://scenes/CellHighlight.cs" id="3_fpsne"]
+
+[sub_resource type="Gradient" id="Gradient_v0tte"]
+interpolation_mode = 1
+offsets = PackedFloat32Array(0, 0)
+colors = PackedColorArray(0.73, 0.3285, 0, 0.533333, 0.73, 0.3285, 0, 0.533333)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_uo4ek"]
+gradient = SubResource("Gradient_v0tte")
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1_wj6df")
+
+[node name="Board" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(500, 500)
+scale = Vector2(7, 7)
+texture = ExtResource("1_kyhhr")
+
+[node name="CellHighlight" type="Sprite2D" parent="."]
+position = Vector2(-84, -77)
+scale = Vector2(1.75, 1.75)
+texture = SubResource("GradientTexture2D_uo4ek")
+script = ExtResource("3_fpsne")
