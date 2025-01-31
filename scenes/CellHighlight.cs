@@ -1,15 +1,30 @@
 using System.Collections.Generic;
 using Godot;
-using static game;
+using static Game;
 
 public partial class CellHighlight : Sprite2D
 {
 	private Dictionary<Vector2I, Sprite2D> children;
+	private Vector2I previousMouseCell;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		children = new Dictionary<Vector2I, Sprite2D>();
+		previousMouseCell = new(-1, -1);
+	}
+
+	public override void _Process(double delta)
+	{
+		Vector2I currentMouseCell = ConvertToCell(GetViewport().GetMousePosition());
+		if (currentMouseCell.Equals(previousMouseCell))
+		{
+			return;
+		}
+
+		DeselectCell(previousMouseCell);
+		SelectCell(currentMouseCell);
+		previousMouseCell = currentMouseCell;
 	}
 
 	public void SelectCell(Vector2I cell)
@@ -18,7 +33,7 @@ public partial class CellHighlight : Sprite2D
 		{
 			Texture = Texture,
 			Centered = true,
-			Position = ConvertFromCell(cell, new(32, 32), new(1.75f, 1.75f)),
+			Position = ConvertFromCell(cell, 1.75f),
 			Scale = new(3.5f, 3.5f),
 			ZIndex = 10
 		};

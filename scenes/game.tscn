@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://bjdv62785qn54"]
 
 [ext_resource type="Texture2D" uid="uid://nojh6vq5vc5s" path="res://assets/pixel chess_v1.2/boards/board_plain_04.png" id="1_kyhhr"]
-[ext_resource type="Script" path="res://scenes/game.cs" id="1_wj6df"]
+[ext_resource type="Script" path="res://scenes/Game.cs" id="1_wj6df"]
 [ext_resource type="Script" path="res://scenes/CellHighlight.cs" id="3_fpsne"]
 
 [sub_resource type="Gradient" id="Gradient_v0tte"]
