@@ -17,7 +17,9 @@ public partial class CellHighlight : Sprite2D
 		Sprite2D highlight = new()
 		{
 			Texture = Texture,
-			Position = ConvertFromCell(cell),
+			Centered = true,
+			Position = ConvertFromCell(cell, new(32, 32), new(1.75f, 1.75f)),
+			Scale = new(3.5f, 3.5f),
 			ZIndex = 10
 		};
 		AddChild(highlight);
