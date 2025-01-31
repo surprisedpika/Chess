@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://bjdv62785qn54"]
+[gd_scene load_steps=7 format=3 uid="uid://bjdv62785qn54"]
 
 [ext_resource type="Texture2D" uid="uid://nojh6vq5vc5s" path="res://assets/pixel chess_v1.2/boards/board_plain_04.png" id="1_kyhhr"]
 [ext_resource type="Script" path="res://scenes/Game.cs" id="1_wj6df"]
+[ext_resource type="Script" path="res://scenes/Board.cs" id="3_c8i0s"]
 [ext_resource type="Script" path="res://scenes/CellHighlight.cs" id="3_fpsne"]
 
 [sub_resource type="Gradient" id="Gradient_v0tte"]
@@ -23,6 +24,7 @@ texture_filter = 1
 position = Vector2(500, 500)
 scale = Vector2(7, 7)
 texture = ExtResource("1_kyhhr")
+script = ExtResource("3_c8i0s")
 
 [node name="CellHighlight" type="Sprite2D" parent="."]
 z_index = -1

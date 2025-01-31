@@ -1,15 +1,16 @@
 using System;
+using System.Collections.Generic;
 using Godot;
+using static Board;
 
 public partial class Game : Node2D
 {
 	public const int Minimum = 50;
 	public const int Maximum = 950;
 	public const int BoardSize = 8;
-
 	public const float cellSize = (Maximum - Minimum) / BoardSize;
+
 	private CellHighlight highlighter;
-	private static readonly Texture2D TestTexture = ResourceLoader.Load<Texture2D>("res://assets/pixel chess_v1.2/16x32 pieces/B_King.png");
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -20,7 +21,7 @@ public partial class Game : Node2D
 		{
 			Sprite2D testPiece = new()
 			{
-				Texture = TestTexture,
+				Texture = new Piece(false, Type.King).getTexture(),
 				Centered = true,
 				Scale = new(4f, 4f),
 				Position = ConvertFromCell(new(i, i), 4f),
