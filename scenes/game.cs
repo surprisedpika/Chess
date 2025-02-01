@@ -58,31 +58,16 @@ public partial class Game : Node2D
 		}
 	}
 
-	// Called every frame. 'delta' is the elapsed time since the previous frame.
-	public override void _Process(double delta)
-	{
-
-	}
-
 	public static Vector2I ConvertToCell(Vector2 pos)
 	{
 		pos = pos.Clamp(new Vector2(Minimum, Minimum), new Vector2(Maximum - 1, Maximum - 1));
-
-		static int mapValue(float a)
-		{
-			a -= Minimum;
-			a /= Maximum - Minimum;
-			a *= BoardSize;
-			return (int)a;
-		}
-
-		return new Vector2I(mapValue(pos.X), mapValue(pos.Y));
+		static int map(float x) => (int)((x - Minimum) / (Maximum - Minimum) * BoardSize);
+		return new Vector2I(map(pos.X), map(pos.Y));
 	}
 
 	public static Vector2 ConvertFromCell(Vector2I cell)
 	{
-		Func<int, float> unmap = x => 2 + Minimum + x * cellSize + cellSize / 2;
-
+		static float unmap(int x) => 2 + Minimum + x * cellSize + cellSize / 2;
 		return new Vector2(unmap(cell.X), unmap(cell.Y));
 	}
 }
