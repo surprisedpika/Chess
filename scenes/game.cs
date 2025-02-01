@@ -49,7 +49,7 @@ public partial class Game : Node2D
 					Texture = piece.GetTexture(),
 					Centered = true,
 					Scale = new(4f, 4f),
-					Position = ConvertFromCell(cell, 4f),
+					Position = ConvertFromCell(cell),
 					ZIndex = 100,
 					Offset = new(0, -3)
 				};
@@ -79,19 +79,10 @@ public partial class Game : Node2D
 		return new Vector2I(mapValue(pos.X), mapValue(pos.Y));
 	}
 
-	public static Vector2 ConvertFromCell(Vector2I cell, float scale)
+	public static Vector2 ConvertFromCell(Vector2I cell)
 	{
-		static float unmapValue(int location, float scale)
-		{
-			float a = location * cellSize;
-			// do NOT question why you gotta take the 4th root here because I DO NOT KNOW
-			float b = a * (float)Math.Pow(scale, 1 / 4);
-			b += Minimum;
-			b += cellSize / 2;
-			b += 2;
-			return b;
-		}
+		Func<int, float> unmap = x => 2 + Minimum + x * cellSize + cellSize / 2;
 
-		return new Vector2(unmapValue(cell.X, scale), unmapValue(cell.Y, scale));
+		return new Vector2(unmap(cell.X), unmap(cell.Y));
 	}
 }

@@ -33,7 +33,7 @@ public partial class CellHighlight : Sprite2D
 		{
 			Texture = Texture,
 			Centered = true,
-			Position = ConvertFromCell(cell, 1.75f),
+			Position = ConvertFromCell(cell),
 			Scale = new(3.5f, 3.5f),
 			ZIndex = 10
 		};
