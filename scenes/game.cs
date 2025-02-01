@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Godot;
 using static Board;
 
@@ -11,26 +10,52 @@ public partial class Game : Node2D
 	public const float cellSize = (Maximum - Minimum) / BoardSize;
 
 	private CellHighlight highlighter;
+	private Board board;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		highlighter = (CellHighlight)FindChild("CellHighlight", false);
+		board = (Board)FindChild("Board", false);
 
-		for (int i = 0; i < 8; i++)
+		board.ResetBoard();
+		DrawBoard();
+	}
+
+	public void DrawBoard()
+	{
+		foreach (var child in GetChildren())
 		{
-			Sprite2D testPiece = new()
+			if (child.Equals(board) || child.Equals(highlighter))
 			{
-				Texture = new Piece(false, Type.King).getTexture(),
-				Centered = true,
-				Scale = new(4f, 4f),
-				Position = ConvertFromCell(new(i, i), 4f),
-				ZIndex = 100,
-				Offset = new(0, -3)
-			};
-			AddChild(testPiece);
+				continue;
+			}
+			child.QueueFree();
 		}
+		for (int y = 0; y < BoardSize; y++)
+		{
+			for (int x = 0; x < BoardSize; x++)
+			{
+				Vector2I cell = new(x, y);
+				Piece? cellContent = board.GetPiece(cell);
+				if (cellContent == null)
+				{
+					continue;
+				}
+				Piece piece = (Piece)cellContent;
 
+				Sprite2D sprite = new()
+				{
+					Texture = piece.GetTexture(),
+					Centered = true,
+					Scale = new(4f, 4f),
+					Position = ConvertFromCell(cell, 4f),
+					ZIndex = 100,
+					Offset = new(0, -3)
+				};
+				AddChild(sprite);
+			}
+		}
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
