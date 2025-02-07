@@ -101,54 +101,58 @@ public partial class Board : Sprite2D
 		{
 			// If the piece is a pawn...
 			case Type.Pawn:
-				GD.Print("Pawn Selected");
-				Vector2I potentialPawnMove;
-				if (piece.isWhite)
 				{
-					// First potential move is one move up (if white)
-					// 0,0 is at the top left of the board
-					potentialPawnMove = new(cell.X, cell.Y - 1);
-				}
-				else
-				{
-					// Or one move down (if black)
-					potentialPawnMove = new(cell.X, cell.Y + 1);
-				}
-				// Pawns cannot move into or through another piece
-				if (GetPiece(potentialPawnMove) is not null)
-				{
-					break;
-				}
-				// Add the first move
-				moves.Add(potentialPawnMove);
+					// TODO: Captures and en-passant
+					GD.Print("Pawn Selected");
+					Vector2I potentialPawnMove;
+					if (piece.isWhite)
+					{
+						// First potential move is one move up (if white)
+						// 0,0 is at the top left of the board
+						potentialPawnMove = new(cell.X, cell.Y - 1);
+					}
+					else
+					{
+						// Or one move down (if black)
+						potentialPawnMove = new(cell.X, cell.Y + 1);
+					}
+					// Pawns cannot move into or through another piece
+					if (GetPiece(potentialPawnMove) is not null)
+					{
+						break;
+					}
+					// Add the first move
+					moves.Add(potentialPawnMove);
 
-				// If the pawn hasn't moved, it can move 2 squares
-				// This logic comes after as the pawn can only move 2 squares in a subset of the cases it can move 1 square
-				if (piece.isWhite && cell.Y == 6)
-				{
-					potentialPawnMove = new(cell.X, cell.Y - 2);
-				}
-				else if (!piece.isWhite && cell.Y == 1)
-				{
-					potentialPawnMove = new(cell.X, cell.Y + 2);
-				}
-				else
-				{
-					// Otherwise, there are no more legal moves
+					// If the pawn hasn't moved, it can move 2 squares
+					// This logic comes after as the pawn can only move 2 squares in a subset of the cases it can move 1 square
+					if (piece.isWhite && cell.Y == 6)
+					{
+						potentialPawnMove = new(cell.X, cell.Y - 2);
+					}
+					else if (!piece.isWhite && cell.Y == 1)
+					{
+						potentialPawnMove = new(cell.X, cell.Y + 2);
+					}
+					else
+					{
+						// Otherwise, there are no more legal moves
+						break;
+					}
+					if (GetPiece(potentialPawnMove) is not null)
+					{
+						// Pawns can't move into another piece
+						break;
+					}
+					// Add the second move
+					moves.Add(potentialPawnMove);
 					break;
 				}
-				if (GetPiece(potentialPawnMove) is not null)
-				{
-					// Pawns can't move into another piece
-					break;
-				}
-				// Add the second move
-				moves.Add(potentialPawnMove);
-				break;
 			case Type.Knight:
-				GD.Print("Knight Selected");
-				// Knights move in an L shape, 2 in one direction, 1 in the other
-				List<Vector2I> potentialKnightMoves = new()
+				{
+					GD.Print("Knight Selected");
+					// Knights move in an L shape, 2 in one direction, 1 in the other
+					List<Vector2I> potentialKnightMoves = new()
 				{
 					new Vector2I(cell.X - 1, cell.Y + 2),
 					new Vector2I(cell.X - 1, cell.Y - 2),
@@ -162,31 +166,106 @@ public partial class Board : Sprite2D
 					new Vector2I(cell.X + 2, cell.Y + 1),
 					new Vector2I(cell.X + 2, cell.Y - 1)
 				};
-				foreach (Vector2I potentialKnightMove in potentialKnightMoves)
-				{
-					// The knight cannot move outside the board
-					if (!IsInBoard(potentialKnightMove))
+					foreach (Vector2I potentialKnightMove in potentialKnightMoves)
 					{
-						continue;
-					}
-					// Check if there is a piece where the knight is moving
-					if (GetPiece(potentialKnightMove) is Piece blocker)
-					{
-						// If the pieces are the same colour, the move is illegal
-						if (piece.isWhite == blocker.isWhite)
+						// The knight cannot move outside the board
+						if (!IsInBoard(potentialKnightMove))
 						{
 							continue;
 						}
-						// If they are different colour, the knight can take the piece
-						moves.Add(potentialKnightMove);
+						// Check if there is a piece where the knight is moving
+						if (GetPiece(potentialKnightMove) is Piece blocker)
+						{
+							// If the pieces are the same colour, the move is illegal
+							if (piece.isWhite == blocker.isWhite)
+							{
+								continue;
+							}
+							// If they are different colour, the knight can take the piece
+							moves.Add(potentialKnightMove);
+						}
+						else
+						{
+							// The knight is free to move to an empty square
+							moves.Add(potentialKnightMove);
+						}
 					}
-					else
-					{
-						// The knight is free to move to an empty square
-						moves.Add(potentialKnightMove);
-					}
+					break;
 				}
-				break;
+			case Type.Rook:
+				{
+					GD.Print("Rook Selected");
+					var finished = false;
+
+					void checkMove(Vector2I potentialMove)
+					{
+						if (!IsInBoard(potentialMove))
+						{
+							finished = true;
+							return;
+						}
+						if (GetPiece(potentialMove) is Piece blocker)
+						{
+							if (piece.isWhite != blocker.isWhite)
+							{
+								moves.Add(potentialMove);
+							}
+							finished = true;
+							return;
+						}
+						moves.Add(potentialMove);
+					}
+
+					// Check moves to the right
+					for (int i = cell.X + 1; i < Game.BoardSize; i++)
+					{
+						if (finished)
+						{
+							continue;
+						}
+						Vector2I potentialMove = new(i, cell.Y);
+						checkMove(potentialMove);
+					}
+					finished = false;
+
+					// Check moves to the left
+					for (int i = cell.X - 1; i > 0; i--)
+					{
+						if (finished)
+						{
+							continue;
+						}
+						Vector2I potentialMove = new(i, cell.Y);
+						checkMove(potentialMove);
+					}
+					finished = false;
+
+					// Check moves above
+					for (int i = cell.Y - 1; i > 0; i--)
+					{
+						if (finished)
+						{
+							continue;
+						}
+						Vector2I potentialMove = new(cell.X, i);
+						checkMove(potentialMove);
+					}
+					finished = false;
+
+					// Check moves below
+					for (int i = cell.Y + 1; i < Game.BoardSize; i++)
+					{
+						if (finished)
+						{
+							continue;
+						}
+						Vector2I potentialMove = new(cell.X, i);
+						checkMove(potentialMove);
+					}
+					finished = false;
+
+					break;
+				}
 			default:
 				break;
 		}
