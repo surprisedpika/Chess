@@ -21,15 +21,17 @@ public partial class Game : Node2D
 	}
 	private GameState gameState;
 
-	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
+		// Get references to children that we need to use
 		highlighter = (CellHighlight)FindChild("CellHighlight", false);
 		board = (Board)FindChild("Board", false);
 
+		// Reset private variables
 		selectedCell = new(-1, -1);
 		gameState = GameState.WhiteSelectPiece;
 
+		// Set up board and draw it
 		board.ResetBoard();
 		DrawBoard();
 	}
@@ -115,18 +117,22 @@ public partial class Game : Node2D
 			{
 				continue;
 			}
+			// Remove any old pieces
 			child.QueueFree();
 		}
+		// For each cell on the board...
 		for (int y = 0; y < BoardSize; y++)
 		{
 			for (int x = 0; x < BoardSize; x++)
 			{
 				Vector2I cell = new(x, y);
+				// If the cell is empty, ignore it
 				if (board.GetPiece(cell) is not Piece piece)
 				{
 					continue;
 				}
 
+				// Create the piece at the cell
 				Sprite2D sprite = new()
 				{
 					Texture = piece.GetTexture(),
@@ -136,18 +142,23 @@ public partial class Game : Node2D
 					ZIndex = 100,
 					Offset = new(0, -3)
 				};
+				// Add the piece into the scene
 				AddChild(sprite);
 			}
 		}
 	}
 
+	// Given some position in screenspace, return the cell it is in.
 	public static Vector2I ConvertToCell(Vector2 pos)
 	{
+		// Clamp mouse position to within bounds of board
 		pos = pos.Clamp(new Vector2(Minimum, Minimum), new Vector2(Maximum - 1, Maximum - 1));
+		// Map each dimension to a grid cell
 		static int map(float x) => (int)((x - Minimum) / (Maximum - Minimum) * BoardSize);
 		return new Vector2I(map(pos.X), map(pos.Y));
 	}
 
+	// Return position in screenspace of the center of a grid cell
 	public static Vector2 ConvertFromCell(Vector2I cell)
 	{
 		static float unmap(int x) => 2 + Minimum + x * cellSize + cellSize / 2;
