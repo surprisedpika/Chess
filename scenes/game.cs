@@ -67,6 +67,65 @@ public partial class Game : Node2D
 						board.MakeMove(selectedCell, mouseCell);
 						DrawBoard();
 						gameState = GameState.BlackSelectPiece;
+						break;
+					}
+					if (mouseCell.Equals(selectedCell))
+					{
+						gameState = GameState.WhiteSelectPiece;
+						break;
+					}
+					if (board.GetPiece(mouseCell) is not Piece mousePiece)
+					{
+						break;
+					}
+					if (mousePiece.isWhite)
+					{
+						selectedCell = mouseCell;
+						legalMoves = board.GetLegalMoves(mouseCell);
+						gameState = GameState.WhiteSelectMove;
+						break;
+					}
+					break;
+				}
+			case GameState.BlackSelectPiece:
+				{
+					if (board.GetPiece(mouseCell) is not Piece piece)
+					{
+						break;
+					}
+					if (!piece.isWhite)
+					{
+						selectedCell = mouseCell;
+						legalMoves = board.GetLegalMoves(mouseCell);
+						gameState = GameState.BlackSelectMove;
+						break;
+					}
+					break;
+				}
+			case GameState.BlackSelectMove:
+				{
+					if (legalMoves.Contains(mouseCell))
+					{
+						board.MakeMove(selectedCell, mouseCell);
+						DrawBoard();
+						gameState = GameState.WhiteSelectPiece;
+						break;
+					}
+					if (mouseCell.Equals(selectedCell))
+					{
+						gameState = GameState.BlackSelectPiece;
+						break;
+					}
+					if (board.GetPiece(mouseCell) is not Piece mousePiece)
+					{
+						break;
+					}
+					if (!mousePiece.isWhite)
+					{
+						selectedCell = mouseCell;
+						legalMoves = board.GetLegalMoves(mouseCell);
+						gameState = GameState.BlackSelectMove;
+						break;
 					}
 					break;
 				}
