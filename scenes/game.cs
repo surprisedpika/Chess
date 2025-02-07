@@ -53,67 +53,42 @@ public partial class Game : Node2D
 						break;
 					}
 					bool whiteToPlay = gameState == GameState.WhiteSelectPiece;
-					if (whiteToPlay == piece.isWhite)
+					if (whiteToPlay != piece.isWhite)
 					{
-						selectedCell = mouseCell;
-						legalMoves = board.GetLegalMoves(mouseCell);
-						gameState = whiteToPlay ? GameState.WhiteSelectMove : GameState.BlackSelectMove;
 						break;
 					}
+					selectedCell = mouseCell;
+					legalMoves = board.GetLegalMoves(mouseCell);
+					gameState = whiteToPlay ? GameState.WhiteSelectMove : GameState.BlackSelectMove;
 					break;
 				}
 			case GameState.WhiteSelectMove:
-				{
-					if (legalMoves.Contains(mouseCell))
-					{
-						board.MakeMove(selectedCell, mouseCell);
-						DrawBoard();
-						gameState = GameState.BlackSelectPiece;
-						break;
-					}
-					if (mouseCell.Equals(selectedCell))
-					{
-						gameState = GameState.WhiteSelectPiece;
-						break;
-					}
-					if (board.GetPiece(mouseCell) is not Piece mousePiece)
-					{
-						break;
-					}
-					if (mousePiece.isWhite)
-					{
-						selectedCell = mouseCell;
-						legalMoves = board.GetLegalMoves(mouseCell);
-						gameState = GameState.WhiteSelectMove;
-						break;
-					}
-					break;
-				}
 			case GameState.BlackSelectMove:
 				{
+					bool whiteToPlay = gameState == GameState.WhiteSelectMove;
 					if (legalMoves.Contains(mouseCell))
 					{
 						board.MakeMove(selectedCell, mouseCell);
 						DrawBoard();
-						gameState = GameState.WhiteSelectPiece;
+						gameState = whiteToPlay ? GameState.BlackSelectPiece : GameState.WhiteSelectPiece;
 						break;
 					}
 					if (mouseCell.Equals(selectedCell))
 					{
-						gameState = GameState.BlackSelectPiece;
+						gameState = whiteToPlay ? GameState.WhiteSelectPiece : GameState.BlackSelectPiece;
 						break;
 					}
 					if (board.GetPiece(mouseCell) is not Piece mousePiece)
 					{
 						break;
 					}
-					if (!mousePiece.isWhite)
+					if (mousePiece.isWhite != whiteToPlay)
 					{
-						selectedCell = mouseCell;
-						legalMoves = board.GetLegalMoves(mouseCell);
-						gameState = GameState.BlackSelectMove;
 						break;
 					}
+					selectedCell = mouseCell;
+					legalMoves = board.GetLegalMoves(mouseCell);
+					gameState = whiteToPlay ? GameState.WhiteSelectMove : GameState.BlackSelectMove;
 					break;
 				}
 			default:
