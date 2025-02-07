@@ -41,6 +41,8 @@ public partial class Game : Node2D
 			return;
 		}
 
+		// A cell has been clicked on
+
 		Vector2I mouseCell = ConvertToCell(GetViewport().GetMousePosition());
 
 		switch (gameState)
@@ -48,26 +50,32 @@ public partial class Game : Node2D
 			case GameState.WhiteSelectPiece:
 			case GameState.BlackSelectPiece:
 				{
+					// Selecting the piece to move
 					if (board.GetPiece(mouseCell) is not Piece piece)
 					{
 						break;
 					}
+					// Cell selected is a piece
 					bool whiteToPlay = gameState == GameState.WhiteSelectPiece;
 					if (whiteToPlay != piece.isWhite)
 					{
 						break;
 					}
+					// Piece selected is the right colour
 					selectedCell = mouseCell;
 					legalMoves = board.GetLegalMoves(mouseCell);
 					gameState = whiteToPlay ? GameState.WhiteSelectMove : GameState.BlackSelectMove;
+					// Get list of legal moves for that piece and store it, change game state
 					break;
 				}
 			case GameState.WhiteSelectMove:
 			case GameState.BlackSelectMove:
 				{
+					// Selecting the cell to move the piece to
 					bool whiteToPlay = gameState == GameState.WhiteSelectMove;
 					if (legalMoves.Contains(mouseCell))
 					{
+						// If a legal move was selected, make it
 						board.MakeMove(selectedCell, mouseCell);
 						DrawBoard();
 						gameState = whiteToPlay ? GameState.BlackSelectPiece : GameState.WhiteSelectPiece;
@@ -75,17 +83,20 @@ public partial class Game : Node2D
 					}
 					if (mouseCell.Equals(selectedCell))
 					{
+						// If the player clicks on the piece again, deselect it
 						gameState = whiteToPlay ? GameState.WhiteSelectPiece : GameState.BlackSelectPiece;
 						break;
 					}
 					if (board.GetPiece(mouseCell) is not Piece mousePiece)
 					{
+						// If the player clicks on some random square, try again
 						break;
 					}
 					if (mousePiece.isWhite != whiteToPlay)
 					{
 						break;
 					}
+					// If the player clicks on a different piece of the same colour, select it instead
 					selectedCell = mouseCell;
 					legalMoves = board.GetLegalMoves(mouseCell);
 					gameState = whiteToPlay ? GameState.WhiteSelectMove : GameState.BlackSelectMove;
@@ -94,15 +105,6 @@ public partial class Game : Node2D
 			default:
 				break;
 		}
-
-		// Vector2I mouseCell = ConvertToCell(GetViewport().GetMousePosition());
-
-		// List<Vector2I> legalMoves = board.GetLegalMoves(mouseCell);
-
-		// foreach (Vector2I cell in legalMoves)
-		// {
-		// 	GD.Print(cell);
-		// }
 	}
 
 	public void DrawBoard()
