@@ -27,8 +27,17 @@ public partial class CellHighlight : Sprite2D
 		previousMouseCell = currentMouseCell;
 	}
 
+	public bool IsSelected(Vector2I cell)
+	{
+		return children.ContainsKey(cell);
+	}
+
 	public void SelectCell(Vector2I cell)
 	{
+		if (IsSelected(cell))
+		{
+			return;
+		}
 		Sprite2D highlight = new()
 		{
 			Texture = Texture,

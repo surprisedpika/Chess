@@ -1,4 +1,4 @@
-using System;
+using System.Collections.Generic;
 using Godot;
 using static Board;
 
@@ -12,14 +12,35 @@ public partial class Game : Node2D
 	private CellHighlight highlighter;
 	private Board board;
 
+	private Vector2I selectedCell;
+
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		highlighter = (CellHighlight)FindChild("CellHighlight", false);
 		board = (Board)FindChild("Board", false);
 
+		selectedCell = new(-1, -1);
+
 		board.ResetBoard();
 		DrawBoard();
+	}
+
+	public override void _Input(InputEvent @event)
+	{
+		if (!@event.IsActionPressed("primary"))
+		{
+			return;
+		}
+
+		Vector2I mouseCell = ConvertToCell(GetViewport().GetMousePosition());
+
+		List<Vector2I> legalMoves = board.GetLegalMoves(mouseCell);
+
+		foreach (Vector2I cell in legalMoves)
+		{
+			GD.Print(cell);
+		}
 	}
 
 	public void DrawBoard()
@@ -37,12 +58,10 @@ public partial class Game : Node2D
 			for (int x = 0; x < BoardSize; x++)
 			{
 				Vector2I cell = new(x, y);
-				Piece? cellContent = board.GetPiece(cell);
-				if (cellContent == null)
+				if (board.GetPiece(cell) is not Piece piece)
 				{
 					continue;
 				}
-				Piece piece = (Piece)cellContent;
 
 				Sprite2D sprite = new()
 				{

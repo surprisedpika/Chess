@@ -47,7 +47,7 @@ public partial class Board : Sprite2D
 
 	public Piece? GetPiece(Vector2I cell)
 	{
-		if (cell.X < 0 || cell.X > Game.BoardSize - 1 || cell.Y < 0 || cell.Y > Game.BoardSize - 1)
+		if (!IsInBoard(cell))
 		{
 			throw new IndexOutOfRangeException();
 		}
@@ -57,12 +57,106 @@ public partial class Board : Sprite2D
 
 	public void SetPiece(Vector2I cell, Piece piece)
 	{
-		if (cell.X < 0 || cell.X > Game.BoardSize - 1 || cell.Y < 0 || cell.Y > Game.BoardSize - 1)
+		if (!IsInBoard(cell))
 		{
 			throw new IndexOutOfRangeException();
 		}
 		int index = cell.X + cell.Y * 8;
 		Pieces[index] = piece;
+	}
+
+	public List<Vector2I> GetLegalMoves(Vector2I cell)
+	{
+		List<Vector2I> moves = new();
+		if (GetPiece(cell) is not Piece piece)
+		{
+			return moves;
+		}
+		switch (piece.type)
+		{
+			case Type.Pawn:
+				GD.Print("Pawn Selected");
+				Vector2I potentialPawnMove;
+				if (piece.isWhite)
+				{
+					potentialPawnMove = new(cell.X, cell.Y - 1);
+				}
+				else
+				{
+					potentialPawnMove = new(cell.X, cell.Y + 1);
+				}
+				if (GetPiece(potentialPawnMove) is not null)
+				{
+					break;
+				}
+				moves.Add(potentialPawnMove);
+				if (piece.isWhite && cell.Y == 6)
+				{
+					potentialPawnMove = new(cell.X, cell.Y - 2);
+				}
+				else if (!piece.isWhite && cell.Y == 1)
+				{
+					potentialPawnMove = new(cell.X, cell.Y + 2);
+				}
+				else
+				{
+					break;
+				}
+				if (GetPiece(potentialPawnMove) is not null)
+				{
+					break;
+				}
+				moves.Add(potentialPawnMove);
+				break;
+			case Type.Knight:
+				GD.Print("Knight Selected");
+				List<Vector2I> potentialKnightMoves = new()
+				{
+					new Vector2I(cell.X - 1, cell.Y + 2),
+					new Vector2I(cell.X - 1, cell.Y - 2),
+
+					new Vector2I(cell.X + 1, cell.Y + 2),
+					new Vector2I(cell.X + 1, cell.Y - 2),
+
+					new Vector2I(cell.X - 2, cell.Y + 1),
+					new Vector2I(cell.X - 2, cell.Y - 1),
+
+					new Vector2I(cell.X + 2, cell.Y + 1),
+					new Vector2I(cell.X + 2, cell.Y - 1)
+				};
+				foreach (Vector2I potentialKnightMove in potentialKnightMoves)
+				{
+					if (!IsInBoard(potentialKnightMove))
+					{
+						continue;
+					}
+					if (GetPiece(potentialKnightMove) is Piece blocker)
+					{
+						if (piece.isWhite == blocker.isWhite)
+						{
+							continue;
+						}
+						moves.Add(potentialKnightMove);
+					}
+					else
+					{
+						moves.Add(potentialKnightMove);
+					}
+				}
+				break;
+			default:
+				break;
+		}
+		return moves;
+	}
+
+	public static bool IsInBoard(Vector2I cell)
+	{
+		if (cell.X < 0 || cell.X > Game.BoardSize - 1 || cell.Y < 0 || cell.Y > Game.BoardSize - 1)
+		{
+			return false;
+		}
+		return true;
 	}
 
 	public void ResetBoard()
@@ -97,17 +191,11 @@ public partial class Board : Sprite2D
 		SetPiece(new(7, 7), new(true, Type.Rook));
 	}
 
-	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		for (int i = 0; i < 64; i++)
 		{
 			Pieces.Add(null);
 		}
-	}
-
-	// Called every frame. 'delta' is the elapsed time since the previous frame.
-	public override void _Process(double delta)
-	{
 	}
 }
