@@ -13,6 +13,13 @@ public partial class Game : Node2D
 	private Board board;
 
 	private Vector2I selectedCell;
+	private List<Vector2I> legalMoves;
+
+	private enum GameState
+	{
+		WhiteSelectPiece, WhiteSelectMove, BlackSelectPiece, BlackSelectMove, Done
+	}
+	private GameState gameState;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -21,6 +28,7 @@ public partial class Game : Node2D
 		board = (Board)FindChild("Board", false);
 
 		selectedCell = new(-1, -1);
+		gameState = GameState.WhiteSelectPiece;
 
 		board.ResetBoard();
 		DrawBoard();
@@ -35,12 +43,45 @@ public partial class Game : Node2D
 
 		Vector2I mouseCell = ConvertToCell(GetViewport().GetMousePosition());
 
-		List<Vector2I> legalMoves = board.GetLegalMoves(mouseCell);
-
-		foreach (Vector2I cell in legalMoves)
+		switch (gameState)
 		{
-			GD.Print(cell);
+			case GameState.WhiteSelectPiece:
+				{
+					if (board.GetPiece(mouseCell) is not Piece piece)
+					{
+						break;
+					}
+					if (piece.isWhite)
+					{
+						selectedCell = mouseCell;
+						legalMoves = board.GetLegalMoves(mouseCell);
+						gameState = GameState.WhiteSelectMove;
+						break;
+					}
+					break;
+				}
+			case GameState.WhiteSelectMove:
+				{
+					if (legalMoves.Contains(mouseCell))
+					{
+						board.MakeMove(selectedCell, mouseCell);
+						DrawBoard();
+						gameState = GameState.BlackSelectPiece;
+					}
+					break;
+				}
+			default:
+				break;
 		}
+
+		// Vector2I mouseCell = ConvertToCell(GetViewport().GetMousePosition());
+
+		// List<Vector2I> legalMoves = board.GetLegalMoves(mouseCell);
+
+		// foreach (Vector2I cell in legalMoves)
+		// {
+		// 	GD.Print(cell);
+		// }
 	}
 
 	public void DrawBoard()

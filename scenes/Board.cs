@@ -55,7 +55,7 @@ public partial class Board : Sprite2D
 		return Pieces[index];
 	}
 
-	public void SetPiece(Vector2I cell, Piece piece)
+	public void SetCell(Vector2I cell, Piece? piece)
 	{
 		if (!IsInBoard(cell))
 		{
@@ -63,6 +63,20 @@ public partial class Board : Sprite2D
 		}
 		int index = cell.X + cell.Y * 8;
 		Pieces[index] = piece;
+	}
+
+	public void MakeMove(Vector2I from, Vector2I to)
+	{
+		if (!IsInBoard(from) || !IsInBoard(to))
+		{
+			throw new IndexOutOfRangeException();
+		}
+		if (GetPiece(from) is not Piece piece)
+		{
+			throw new Exception("No piece at cell");
+		}
+		SetCell(from, null);
+		SetCell(to, piece);
 	}
 
 	public List<Vector2I> GetLegalMoves(Vector2I cell)
@@ -163,32 +177,32 @@ public partial class Board : Sprite2D
 	{
 		for (int i = 0; i < Game.BoardSize; i++)
 		{
-			SetPiece(new(i, 1), new(false, Type.Pawn));
-			SetPiece(new(i, 6), new(true, Type.Pawn));
+			SetCell(new(i, 1), new(false, Type.Pawn));
+			SetCell(new(i, 6), new(true, Type.Pawn));
 		}
-		SetPiece(new(0, 0), new(false, Type.Rook));
-		SetPiece(new(0, 7), new(true, Type.Rook));
+		SetCell(new(0, 0), new(false, Type.Rook));
+		SetCell(new(0, 7), new(true, Type.Rook));
 
-		SetPiece(new(1, 0), new(false, Type.Knight));
-		SetPiece(new(1, 7), new(true, Type.Knight));
+		SetCell(new(1, 0), new(false, Type.Knight));
+		SetCell(new(1, 7), new(true, Type.Knight));
 
-		SetPiece(new(2, 0), new(false, Type.Bishop));
-		SetPiece(new(2, 7), new(true, Type.Bishop));
+		SetCell(new(2, 0), new(false, Type.Bishop));
+		SetCell(new(2, 7), new(true, Type.Bishop));
 
-		SetPiece(new(3, 0), new(false, Type.Queen));
-		SetPiece(new(3, 7), new(true, Type.Queen));
+		SetCell(new(3, 0), new(false, Type.Queen));
+		SetCell(new(3, 7), new(true, Type.Queen));
 
-		SetPiece(new(4, 0), new(false, Type.King));
-		SetPiece(new(4, 7), new(true, Type.King));
+		SetCell(new(4, 0), new(false, Type.King));
+		SetCell(new(4, 7), new(true, Type.King));
 
-		SetPiece(new(5, 0), new(false, Type.Bishop));
-		SetPiece(new(5, 7), new(true, Type.Bishop));
+		SetCell(new(5, 0), new(false, Type.Bishop));
+		SetCell(new(5, 7), new(true, Type.Bishop));
 
-		SetPiece(new(6, 0), new(false, Type.Knight));
-		SetPiece(new(6, 7), new(true, Type.Knight));
+		SetCell(new(6, 0), new(false, Type.Knight));
+		SetCell(new(6, 7), new(true, Type.Knight));
 
-		SetPiece(new(7, 0), new(false, Type.Rook));
-		SetPiece(new(7, 7), new(true, Type.Rook));
+		SetCell(new(7, 0), new(false, Type.Rook));
+		SetCell(new(7, 7), new(true, Type.Rook));
 	}
 
 	public override void _Ready()
