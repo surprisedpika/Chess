@@ -46,16 +46,18 @@ public partial class Game : Node2D
 		switch (gameState)
 		{
 			case GameState.WhiteSelectPiece:
+			case GameState.BlackSelectPiece:
 				{
 					if (board.GetPiece(mouseCell) is not Piece piece)
 					{
 						break;
 					}
-					if (piece.isWhite)
+					bool whiteToPlay = gameState == GameState.WhiteSelectPiece;
+					if (whiteToPlay == piece.isWhite)
 					{
 						selectedCell = mouseCell;
 						legalMoves = board.GetLegalMoves(mouseCell);
-						gameState = GameState.WhiteSelectMove;
+						gameState = whiteToPlay ? GameState.WhiteSelectMove : GameState.BlackSelectMove;
 						break;
 					}
 					break;
@@ -83,21 +85,6 @@ public partial class Game : Node2D
 						selectedCell = mouseCell;
 						legalMoves = board.GetLegalMoves(mouseCell);
 						gameState = GameState.WhiteSelectMove;
-						break;
-					}
-					break;
-				}
-			case GameState.BlackSelectPiece:
-				{
-					if (board.GetPiece(mouseCell) is not Piece piece)
-					{
-						break;
-					}
-					if (!piece.isWhite)
-					{
-						selectedCell = mouseCell;
-						legalMoves = board.GetLegalMoves(mouseCell);
-						gameState = GameState.BlackSelectMove;
 						break;
 					}
 					break;
