@@ -45,65 +45,85 @@ public partial class Board : Sprite2D
 		}
 	}
 
+	// Get the piece at a cell. If the cell is empty, return null
 	public Piece? GetPiece(Vector2I cell)
 	{
 		if (!IsInBoard(cell))
 		{
 			throw new IndexOutOfRangeException();
 		}
+		// Convert a grid coordinate to an index from 0-63
 		int index = cell.X + cell.Y * 8;
 		return Pieces[index];
 	}
 
+	// Set a cell to a piece or null
 	public void SetCell(Vector2I cell, Piece? piece)
 	{
 		if (!IsInBoard(cell))
 		{
 			throw new IndexOutOfRangeException();
 		}
+		// Convert a grid coordinate to an index from 0-63
 		int index = cell.X + cell.Y * 8;
 		Pieces[index] = piece;
 	}
 
+	// Put a piece on a new cell, and remove it from the old cell
 	public void MakeMove(Vector2I from, Vector2I to)
 	{
+		// If either cell is outside the board, throw an error
 		if (!IsInBoard(from) || !IsInBoard(to))
 		{
 			throw new IndexOutOfRangeException();
 		}
+		// If there is no piece to move, throw an error
 		if (GetPiece(from) is not Piece piece)
 		{
 			throw new Exception("No piece at cell");
 		}
+		// Remove the piece from the old cell
 		SetCell(from, null);
+		// Place it at the new cell
 		SetCell(to, piece);
 	}
 
+	// Return a list of legal moves for a given piece
 	public List<Vector2I> GetLegalMoves(Vector2I cell)
 	{
 		List<Vector2I> moves = new();
+		// If the piece is not a piece, return an empty list
 		if (GetPiece(cell) is not Piece piece)
 		{
 			return moves;
 		}
 		switch (piece.type)
 		{
+			// If the piece is a pawn...
 			case Type.Pawn:
 				GD.Print("Pawn Selected");
 				Vector2I potentialPawnMove;
 				if (piece.isWhite)
 				{
+					// First potential move is one move up (if white)
+					// 0,0 is at the top left of the board
 					potentialPawnMove = new(cell.X, cell.Y - 1);
 				}
 				else
 				{
+					// Or one move down (if black)
 					potentialPawnMove = new(cell.X, cell.Y + 1);
 				}
+				// Pawns cannot move into or through another piece
 				if (GetPiece(potentialPawnMove) is not null)
 				{
 					break;
 				}
+				// Add the first move
 				moves.Add(potentialPawnMove);
+
+				// If the pawn hasn't moved, it can move 2 squares
+				// This logic comes after as the pawn can only move 2 squares in a subset of the cases it can move 1 square
 				if (piece.isWhite && cell.Y == 6)
 				{
 					potentialPawnMove = new(cell.X, cell.Y - 2);
@@ -114,16 +134,20 @@ public partial class Board : Sprite2D
 				}
 				else
 				{
+					// Otherwise, there are no more legal moves
 					break;
 				}
 				if (GetPiece(potentialPawnMove) is not null)
 				{
+					// Pawns can't move into another piece
 					break;
 				}
+				// Add the second move
 				moves.Add(potentialPawnMove);
 				break;
 			case Type.Knight:
 				GD.Print("Knight Selected");
+				// Knights move in an L shape, 2 in one direction, 1 in the other
 				List<Vector2I> potentialKnightMoves = new()
 				{
 					new Vector2I(cell.X - 1, cell.Y + 2),
@@ -140,20 +164,25 @@ public partial class Board : Sprite2D
 				};
 				foreach (Vector2I potentialKnightMove in potentialKnightMoves)
 				{
+					// The knight cannot move outside the board
 					if (!IsInBoard(potentialKnightMove))
 					{
 						continue;
 					}
+					// Check if there is a piece where the knight is moving
 					if (GetPiece(potentialKnightMove) is Piece blocker)
 					{
+						// If the pieces are the same colour, the move is illegal
 						if (piece.isWhite == blocker.isWhite)
 						{
 							continue;
 						}
+						// If they are different colour, the knight can take the piece
 						moves.Add(potentialKnightMove);
 					}
 					else
 					{
+						// The knight is free to move to an empty square
 						moves.Add(potentialKnightMove);
 					}
 				}
@@ -164,6 +193,7 @@ public partial class Board : Sprite2D
 		return moves;
 	}
 
+	// Checks a cell is inside a board
 	public static bool IsInBoard(Vector2I cell)
 	{
 		if (cell.X < 0 || cell.X > Game.BoardSize - 1 || cell.Y < 0 || cell.Y > Game.BoardSize - 1)
@@ -173,13 +203,23 @@ public partial class Board : Sprite2D
 		return true;
 	}
 
+	// Set up the pieces on the board
 	public void ResetBoard()
 	{
+		// Clear board
+		for (int i = 0; i < 64; i++)
+		{
+			Pieces[0] = null;
+		}
+
+		// Put one pawn in each column for black and white
 		for (int i = 0; i < Game.BoardSize; i++)
 		{
 			SetCell(new(i, 1), new(false, Type.Pawn));
 			SetCell(new(i, 6), new(true, Type.Pawn));
 		}
+
+		// Set up other pieces as normal
 		SetCell(new(0, 0), new(false, Type.Rook));
 		SetCell(new(0, 7), new(true, Type.Rook));
 
