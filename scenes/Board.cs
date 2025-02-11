@@ -180,118 +180,6 @@ public partial class Board : Sprite2D
 		return moves;
 	}
 
-	private List<Vector2I> GetRookLegalMoves(Vector2I cell, bool isWhite)
-	{
-		List<Vector2I> moves = new();
-		List<Vector2I> blockedDirections = new();
-		// For the length of the board...
-		for (int i = 1; i <= 7; i++)
-		{
-			// Both forward and backward...
-			foreach (int dir in new[] { -1, 1 })
-			{
-				// Both updown and leftright...
-				foreach (bool isVertical in new[] { false, true })
-				{
-					Vector2I direction = isVertical ? new(0, dir) : new(dir, 0);
-					// If the direction is blocked, don't progress to next cell
-					if (blockedDirections.Contains(direction))
-					{
-						continue;
-					}
-					Vector2I potentialCell = cell + direction * i;
-					// If the next cell is outside the board, mark the direction as blocked
-					if (!IsInBoard(potentialCell))
-					{
-						blockedDirections.Add(direction);
-						continue;
-					}
-					// If the next cell is empty
-					if (GetPiece(potentialCell) is not Piece blocker)
-					{
-						// We can move there freely
-						moves.Add(potentialCell);
-						continue;
-					}
-					// If the next cell contains a piece the same colour as us
-					if (blocker.isWhite == isWhite)
-					{
-						// The direction is blocked (rooks can't jump over pieces)
-						blockedDirections.Add(direction);
-						continue;
-					}
-					// If the next cell contains a piece the opposite colour as us
-					// We can move there
-					moves.Add(potentialCell);
-					// But no further
-					blockedDirections.Add(direction);
-					continue;
-				}
-			}
-			if (blockedDirections.Count == 4)
-			{
-				return moves;
-			}
-		}
-		return moves;
-	}
-
-	private List<Vector2I> GetBishopLegalMoves(Vector2I cell, bool isWhite)
-	{
-		List<Vector2I> moves = new();
-		List<Vector2I> blockedDirections = new();
-		// For the length of the board
-		for (int i = 1; i <= 7; i++)
-		{
-			// Both forward and backward
-			foreach (int x in new[] { -1, 1 })
-			{
-				// Both up and down
-				foreach (int y in new[] { -1, 1 })
-				{
-					Vector2I direction = new(x, y);
-					// If the direction is blocked, don't progress to next cell
-					if (blockedDirections.Contains(direction))
-					{
-						continue;
-					}
-					Vector2I potentialCell = cell + direction * i;
-					// If the next cell is outside the board, mark the direction as blocked
-					if (!IsInBoard(potentialCell))
-					{
-						blockedDirections.Add(direction);
-						continue;
-					}
-					// If the next cell is empty
-					if (GetPiece(potentialCell) is not Piece blocker)
-					{
-						// We can move there freely
-						moves.Add(potentialCell);
-						continue;
-					}
-					// If the next cell contains a piece the same colour as us
-					if (blocker.isWhite == isWhite)
-					{
-						// The direction is blocked (bishops can't jump over pieces)
-						blockedDirections.Add(direction);
-						continue;
-					}
-					// If the next cell contains a piece the opposite colour as us
-					// We can move there
-					moves.Add(potentialCell);
-					// But no further
-					blockedDirections.Add(direction);
-					continue;
-				}
-			}
-			if (blockedDirections.Count == 4)
-			{
-				return moves;
-			}
-		}
-		return moves;
-	}
-
 	private List<Vector2I> GetKingLegalMoves(Vector2I cell, bool isWhite)
 	{
 		List<Vector2I> moves = new();
@@ -331,6 +219,53 @@ public partial class Board : Sprite2D
 		return moves;
 	}
 
+	// Rook, queen, bishop
+	private List<Vector2I> GetSlidingPieceLegalMoves(Vector2I cell, bool isWhite, List<Vector2I> directions)
+	{
+		List<Vector2I> moves = new();
+		List<Vector2I> blockedDirections = new();
+
+		for (int i = 1; i <= 7; i++)
+		{
+			foreach (Vector2I direction in directions)
+			{
+				if (blockedDirections.Contains(direction))
+				{
+					continue;
+				}
+
+				Vector2I potentialCell = cell + direction * i;
+				if (!IsInBoard(potentialCell))
+				{
+					blockedDirections.Add(direction);
+					continue;
+				}
+
+				if (GetPiece(potentialCell) is not Piece blocker)
+				{
+					moves.Add(potentialCell);
+					continue;
+				}
+
+				if (blocker.isWhite == isWhite)
+				{
+					blockedDirections.Add(direction);
+					continue;
+				}
+
+				moves.Add(potentialCell);
+				blockedDirections.Add(direction);
+			}
+
+			if (blockedDirections.Count == directions.Count)
+			{
+				return moves;
+			}
+		}
+
+		return moves;
+	}
+
 	// Return a list of legal moves for a given piece
 	public List<Vector2I> GetLegalMoves(Vector2I cell)
 	{
@@ -359,20 +294,44 @@ public partial class Board : Sprite2D
 			case Type.Queen:
 				{
 					GD.Print("Queen Selected");
-					moves.AddRange(GetRookLegalMoves(cell, piece.isWhite));
-					moves.AddRange(GetBishopLegalMoves(cell, piece.isWhite));
+					List<Vector2I> directions = new()
+					{
+						Vector2I.Up,
+						Vector2I.Down,
+						Vector2I.Left,
+						Vector2I.Right,
+						new(-1, -1), // Up left
+						new(-1, 1), // Up right
+						new(1, -1), // Down left
+						new(1, 1) // Down right
+					};
+					moves.AddRange(GetSlidingPieceLegalMoves(cell, piece.isWhite, directions));
 					break;
 				}
 			case Type.Rook:
 				{
 					GD.Print("Rook Selected");
-					moves.AddRange(GetRookLegalMoves(cell, piece.isWhite));
+					List<Vector2I> directions = new()
+					{
+						Vector2I.Up,
+						Vector2I.Down,
+						Vector2I.Left,
+						Vector2I.Right
+					};
+					moves.AddRange(GetSlidingPieceLegalMoves(cell, piece.isWhite, directions));
 					break;
 				}
 			case Type.Bishop:
 				{
 					GD.Print("Bishop Selected");
-					moves.AddRange(GetBishopLegalMoves(cell, piece.isWhite));
+					List<Vector2I> directions = new()
+					{
+						new(-1, -1), // Up left
+						new(-1, 1), // Up right
+						new(1, -1), // Down left
+						new(1, 1) // Down right
+					};
+					moves.AddRange(GetSlidingPieceLegalMoves(cell, piece.isWhite, directions));
 					break;
 				}
 			case Type.King:
