@@ -88,71 +88,58 @@ public partial class Board : Sprite2D
 		SetCell(to, piece);
 	}
 
-	// Return a list of legal moves for a given piece
-	public List<Vector2I> GetLegalMoves(Vector2I cell)
+	private List<Vector2I> GetPawnLegalMoves(Vector2I cell, bool isWhite)
 	{
 		List<Vector2I> moves = new();
-		// If the piece is not a piece, return an empty list
-		if (GetPiece(cell) is not Piece piece)
+		Vector2I potentialPawnMove;
+		if (isWhite)
+		{
+			// First potential move is one move up (if white)
+			// 0,0 is at the top left of the board
+			potentialPawnMove = new(cell.X, cell.Y - 1);
+		}
+		else
+		{
+			// Or one move down (if black)
+			potentialPawnMove = new(cell.X, cell.Y + 1);
+		}
+		// Pawns cannot move into or through another piece
+		if (GetPiece(potentialPawnMove) is not null)
 		{
 			return moves;
 		}
-		switch (piece.type)
-		{
-			// If the piece is a pawn...
-			case Type.Pawn:
-				{
-					// TODO: Captures and en-passant
-					GD.Print("Pawn Selected");
-					Vector2I potentialPawnMove;
-					if (piece.isWhite)
-					{
-						// First potential move is one move up (if white)
-						// 0,0 is at the top left of the board
-						potentialPawnMove = new(cell.X, cell.Y - 1);
-					}
-					else
-					{
-						// Or one move down (if black)
-						potentialPawnMove = new(cell.X, cell.Y + 1);
-					}
-					// Pawns cannot move into or through another piece
-					if (GetPiece(potentialPawnMove) is not null)
-					{
-						break;
-					}
-					// Add the first move
-					moves.Add(potentialPawnMove);
+		// Add the first move
+		moves.Add(potentialPawnMove);
 
-					// If the pawn hasn't moved, it can move 2 squares
-					// This logic comes after as the pawn can only move 2 squares in a subset of the cases it can move 1 square
-					if (piece.isWhite && cell.Y == 6)
-					{
-						potentialPawnMove = new(cell.X, cell.Y - 2);
-					}
-					else if (!piece.isWhite && cell.Y == 1)
-					{
-						potentialPawnMove = new(cell.X, cell.Y + 2);
-					}
-					else
-					{
-						// Otherwise, there are no more legal moves
-						break;
-					}
-					if (GetPiece(potentialPawnMove) is not null)
-					{
-						// Pawns can't move into another piece
-						break;
-					}
-					// Add the second move
-					moves.Add(potentialPawnMove);
-					break;
-				}
-			case Type.Knight:
-				{
-					GD.Print("Knight Selected");
-					// Knights move in an L shape, 2 in one direction, 1 in the other
-					List<Vector2I> potentialKnightMoves = new()
+		// If the pawn hasn't moved, it can move 2 squares
+		// This logic comes after as the pawn can only move 2 squares in a subset of the cases it can move 1 square
+		if (isWhite && cell.Y == 6)
+		{
+			potentialPawnMove = new(cell.X, cell.Y - 2);
+		}
+		else if (!isWhite && cell.Y == 1)
+		{
+			potentialPawnMove = new(cell.X, cell.Y + 2);
+		}
+		else
+		{
+			// Otherwise, there are no more legal moves
+			return moves;
+		}
+		if (GetPiece(potentialPawnMove) is not null)
+		{
+			// Pawns can't move into another piece
+			return moves;
+		}
+		// Add the second move
+		moves.Add(potentialPawnMove);
+		return moves;
+	}
+
+	private List<Vector2I> GetKnightLegalMoves(Vector2I cell, bool isWhite)
+	{
+		List<Vector2I> moves = new();
+		List<Vector2I> potentialKnightMoves = new()
 				{
 					new Vector2I(cell.X - 1, cell.Y + 2),
 					new Vector2I(cell.X - 1, cell.Y - 2),
@@ -166,101 +153,163 @@ public partial class Board : Sprite2D
 					new Vector2I(cell.X + 2, cell.Y + 1),
 					new Vector2I(cell.X + 2, cell.Y - 1)
 				};
-					foreach (Vector2I potentialKnightMove in potentialKnightMoves)
-					{
-						// The knight cannot move outside the board
-						if (!IsInBoard(potentialKnightMove))
-						{
-							continue;
-						}
-						// Check if there is a piece where the knight is moving
-						if (GetPiece(potentialKnightMove) is Piece blocker)
-						{
-							// If the pieces are the same colour, the move is illegal
-							if (piece.isWhite == blocker.isWhite)
-							{
-								continue;
-							}
-							// If they are different colour, the knight can take the piece
-							moves.Add(potentialKnightMove);
-						}
-						else
-						{
-							// The knight is free to move to an empty square
-							moves.Add(potentialKnightMove);
-						}
-					}
+		foreach (Vector2I potentialKnightMove in potentialKnightMoves)
+		{
+			// The knight cannot move outside the board
+			if (!IsInBoard(potentialKnightMove))
+			{
+				continue;
+			}
+			// Check if there is a piece where the knight is moving
+			if (GetPiece(potentialKnightMove) is Piece blocker)
+			{
+				// If the pieces are the same colour, the move is illegal
+				if (isWhite == blocker.isWhite)
+				{
+					continue;
+				}
+				// If they are different colour, the knight can take the piece
+				moves.Add(potentialKnightMove);
+			}
+			else
+			{
+				// The knight is free to move to an empty square
+				moves.Add(potentialKnightMove);
+			}
+		}
+		return moves;
+	}
+
+	private List<Vector2I> GetRookLegalMoves(Vector2I cell, bool isWhite)
+	{
+		List<Vector2I> moves = new();
+		var finished = false;
+
+		void checkMove(Vector2I potentialMove)
+		{
+			// If the potential move is off the board
+			if (!IsInBoard(potentialMove))
+			{
+				// It and any subsequent moves are illegal
+				finished = true;
+				return;
+			}
+			// If the potential move is inside a piece...
+			if (GetPiece(potentialMove) is Piece blocker)
+			{
+				// If the piece is the opposite colour...
+				if (isWhite != blocker.isWhite)
+				{
+					// We can take it
+					moves.Add(potentialMove);
+				}
+				// Either way, we can't move past that piece so we are done
+				finished = true;
+				return;
+			}
+			// If the potential move is an empty square, we can go there no issue
+			moves.Add(potentialMove);
+		}
+
+		// Check moves to the right
+		for (int i = cell.X + 1; i < Game.BoardSize; i++)
+		{
+			if (finished) continue;
+			Vector2I potentialMove = new(i, cell.Y);
+			checkMove(potentialMove);
+		}
+		finished = false;
+
+		// Check moves to the left
+		for (int i = cell.X - 1; i > 0; i--)
+		{
+			if (finished) continue;
+			Vector2I potentialMove = new(i, cell.Y);
+			checkMove(potentialMove);
+		}
+		finished = false;
+
+		// Check moves above
+		for (int i = cell.Y - 1; i > 0; i--)
+		{
+			if (finished) continue;
+			Vector2I potentialMove = new(cell.X, i);
+			checkMove(potentialMove);
+		}
+		finished = false;
+
+		// Check moves below
+		for (int i = cell.Y + 1; i < Game.BoardSize; i++)
+		{
+			if (finished) continue;
+			Vector2I potentialMove = new(cell.X, i);
+			checkMove(potentialMove);
+		}
+		return moves;
+	}
+
+	private List<Vector2I> GetBishopLegalMoves(Vector2I cell, bool isWhite)
+	{
+		throw new NotImplementedException();
+	}
+
+	private List<Vector2I> GetKingLegalMoves(Vector2I cell, bool isWhite)
+	{
+		throw new NotImplementedException();
+	}
+
+	// Return a list of legal moves for a given piece
+	public List<Vector2I> GetLegalMoves(Vector2I cell)
+	{
+		List<Vector2I> moves = new();
+		// If the piece is not a piece, return an empty list
+		if (GetPiece(cell) is not Piece piece)
+		{
+			return moves;
+		}
+		switch (piece.type)
+		{
+			//TODO: Checks and checkmates
+			case Type.Pawn:
+				{
+					// TODO: Captures and en-passant
+					GD.Print("Pawn Selected");
+					moves.AddRange(GetPawnLegalMoves(cell, piece.isWhite));
+					break;
+				}
+			case Type.Knight:
+				{
+					GD.Print("Knight Selected");
+					moves.AddRange(GetKnightLegalMoves(cell, piece.isWhite));
+					break;
+				}
+			case Type.Queen:
+				{
+					GD.Print("Queen Selected");
+					moves.AddRange(GetRookLegalMoves(cell, piece.isWhite));
+					moves.AddRange(GetBishopLegalMoves(cell, piece.isWhite));
 					break;
 				}
 			case Type.Rook:
 				{
 					GD.Print("Rook Selected");
-					var finished = false;
-
-					void checkMove(Vector2I potentialMove)
-					{
-						// If the potential move is off the board
-						if (!IsInBoard(potentialMove))
-						{
-							// It and any subsequent moves are illegal
-							finished = true;
-							return;
-						}
-						// If the potential move is inside a piece...
-						if (GetPiece(potentialMove) is Piece blocker)
-						{
-							// If the piece is the opposite colour...
-							if (piece.isWhite != blocker.isWhite)
-							{
-								// We can take it
-								moves.Add(potentialMove);
-							}
-							// Either way, we can't move past that piece so we are done
-							finished = true;
-							return;
-						}
-						// If the potential move is an empty square, we can go there no issue
-						moves.Add(potentialMove);
-					}
-
-					// Check moves to the right
-					for (int i = cell.X + 1; i < Game.BoardSize; i++)
-					{
-						if (finished) continue;
-						Vector2I potentialMove = new(i, cell.Y);
-						checkMove(potentialMove);
-					}
-					finished = false;
-
-					// Check moves to the left
-					for (int i = cell.X - 1; i > 0; i--)
-					{
-						if (finished) continue;
-						Vector2I potentialMove = new(i, cell.Y);
-						checkMove(potentialMove);
-					}
-					finished = false;
-
-					// Check moves above
-					for (int i = cell.Y - 1; i > 0; i--)
-					{
-						if (finished) continue;
-						Vector2I potentialMove = new(cell.X, i);
-						checkMove(potentialMove);
-					}
-					finished = false;
-
-					// Check moves below
-					for (int i = cell.Y + 1; i < Game.BoardSize; i++)
-					{
-						if (finished) continue;
-						Vector2I potentialMove = new(cell.X, i);
-						checkMove(potentialMove);
-					}
+					moves.AddRange(GetRookLegalMoves(cell, piece.isWhite));
+					break;
+				}
+			case Type.Bishop:
+				{
+					GD.Print("Bishop Selected");
+					moves.AddRange(GetBishopLegalMoves(cell, piece.isWhite));
+					break;
+				}
+			case Type.King:
+				{
+					GD.Print("King Selected");
+					moves.AddRange(GetKingLegalMoves(cell, piece.isWhite));
 					break;
 				}
 			default:
-				break;
+				throw new Exception("Unknown piece type found!");
 		}
 		return moves;
 	}
