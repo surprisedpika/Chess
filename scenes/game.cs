@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 using static Board;
@@ -17,7 +18,7 @@ public partial class Game : Node2D
 
 	private enum GameState
 	{
-		WhiteSelectPiece, WhiteSelectMove, BlackSelectPiece, BlackSelectMove, Done
+		WhiteSelectPiece, WhiteSelectMove, BlackSelectPiece, BlackSelectMove, WhiteWins, BlackWins, Stalemate
 	}
 	private GameState gameState;
 
@@ -80,6 +81,51 @@ public partial class Game : Node2D
 						// If a legal move was selected, make it
 						board.MakeMove(selectedCell, mouseCell);
 						DrawBoard();
+						// Check for stalemate / checkmate
+						bool mated = true;
+						for (int x = 0; x <= 7; x++)
+						{
+							for (int y = 0; y <= 7; y++)
+							{
+								// If we have already found a legal move, no need to keep checking
+								if (!mated)
+								{
+									continue;
+								}
+
+								Vector2I cell = new(x, y);
+								if (board.GetPiece(cell) is not Piece piece)
+								{
+									continue;
+								}
+								// We are looking ahead to the next turn so a different colour is playing
+								if (piece.isWhite == whiteToPlay)
+								{
+									continue;
+								}
+								// If the piece has no legal moves, try the next
+								if (board.GetLegalMoves(cell).Count == 0)
+								{
+									continue;
+								}
+								mated = false;
+								// Piece has no legal moves, we are not in a checkmate or stalemate situation
+							}
+						}
+
+						if (mated)
+						{
+							// no legal moves were found
+							if (board.IsInCheck(!whiteToPlay))
+							{
+								gameState = whiteToPlay ? GameState.WhiteWins : GameState.BlackWins;
+								break;
+							}
+							// No legal moves, but not in check
+							gameState = GameState.Stalemate;
+							break;
+						}
+
 						gameState = whiteToPlay ? GameState.BlackSelectPiece : GameState.WhiteSelectPiece;
 						break;
 					}
@@ -104,8 +150,17 @@ public partial class Game : Node2D
 					gameState = whiteToPlay ? GameState.WhiteSelectMove : GameState.BlackSelectMove;
 					break;
 				}
-			default:
+			case GameState.WhiteWins:
+				GD.Print("WHITE WINS YIPPEE");
 				break;
+			case GameState.BlackWins:
+				GD.Print("BLACK WINS YIPPEE");
+				break;
+			case GameState.Stalemate:
+				GD.Print("Draw :(");
+				break;
+			default:
+				throw new Exception("Unknown gamestate");
 		}
 	}
 
