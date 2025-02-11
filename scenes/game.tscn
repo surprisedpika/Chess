@@ -20,6 +20,7 @@ texture_filter = 1
 script = ExtResource("1_wj6df")
 
 [node name="Board" type="Sprite2D" parent="."]
+z_index = 1
 texture_filter = 1
 position = Vector2(500, 500)
 scale = Vector2(7, 7)
@@ -28,6 +29,6 @@ script = ExtResource("3_c8i0s")
 
 [node name="CellHighlight" type="Sprite2D" parent="."]
 z_index = -1
-position = Vector2(2.08165e-12, 2.08165e-12)
+position = Vector2(-100, -100)
 texture = SubResource("GradientTexture2D_uo4ek")
 script = ExtResource("3_fpsne")

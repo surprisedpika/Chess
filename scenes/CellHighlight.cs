@@ -48,9 +48,9 @@ public partial class CellHighlight : Sprite2D
 		{
 			Texture = Texture,
 			Centered = true,
-			Position = ConvertFromCell(cell),
+			Position = ConvertFromCell(cell) + Position.Abs(), // Parent is at -100, -100, so need to add 100, 100
 			Scale = new(3.5f, 3.5f),
-			ZIndex = 10
+			ZIndex = 10,
 		};
 		// Add the highlight to the scene
 		AddChild(highlight);
