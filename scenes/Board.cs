@@ -250,7 +250,54 @@ public partial class Board : Sprite2D
 
 	private List<Vector2I> GetBishopLegalMoves(Vector2I cell, bool isWhite)
 	{
-		throw new NotImplementedException();
+		List<Vector2I> moves = new();
+		List<Vector2I> blockedDirections = new();
+		// For the length of the board
+		for (int i = 1; i <= 7; i++)
+		{
+			// Both forward and backward
+			for (int x = -1; x <= 1; x += 2)
+			{
+				// Both up and down
+				for (int y = -1; y <= 1; y += 2)
+				{
+					Vector2I direction = new(x, y);
+					// If the direction is blocked, don't progress to next cell
+					if (blockedDirections.Contains(direction))
+					{
+						continue;
+					}
+					Vector2I potentialCell = cell + direction * i;
+					// If the next cell is outside the board, mark the direction as blocked
+					if (!IsInBoard(potentialCell))
+					{
+						blockedDirections.Add(direction);
+						continue;
+					}
+					// If the next cell is empty
+					if (GetPiece(potentialCell) is not Piece blocker)
+					{
+						// We can move there freely
+						moves.Add(potentialCell);
+						continue;
+					}
+					// If the next cell contains a piece the same colour as us
+					if (blocker.isWhite == isWhite)
+					{
+						// The direction is blocked (bishops can't jump over pieces)
+						blockedDirections.Add(direction);
+						continue;
+					}
+					// If the next cell contains a piece the opposite colour as us
+					// We can move there
+					moves.Add(potentialCell);
+					// But no further
+					blockedDirections.Add(direction);
+					continue;
+				}
+			}
+		}
+		return moves;
 	}
 
 	private List<Vector2I> GetKingLegalMoves(Vector2I cell, bool isWhite)
