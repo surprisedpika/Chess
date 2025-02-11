@@ -257,12 +257,13 @@ public partial class Board : Sprite2D
 	{
 		List<Vector2I> moves = new();
 		// For the column before, same column, and column after...
-		for (int x = -1; x < 2; x++)
+		for (int x = -1; x <= 1; x++)
 		{
 			// For the row before, same row, and row after...
-			for (int y = -1; x < 2; x++)
+			for (int y = -1; y <= 1; y++)
 			{
 				Vector2I potentialMove = new(cell.X + x, cell.Y + y);
+				GD.Print(potentialMove);
 				// Can't move to a square outside the board
 				if (!IsInBoard(potentialMove))
 				{
