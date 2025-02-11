@@ -391,7 +391,7 @@ public partial class Board : Sprite2D
 			default:
 				throw new Exception("Unknown piece type found!");
 		}
-		return moves;
+		return RemoveSelfChecks(cell, moves, piece.isWhite);
 	}
 
 	// Checks a cell is inside a board
@@ -578,6 +578,38 @@ public partial class Board : Sprite2D
 
 		// If we exhaust all possible checks, we aren't in check.
 		return false;
+	}
+
+	public Board Clone()
+	{
+		Board clone = new();
+		clone.Pieces.Clear();
+		foreach (var piece in Pieces)
+		{
+			clone.Pieces.Add(piece);
+		}
+		return clone;
+	}
+
+	public bool WouldBeInCheck(Vector2I from, Vector2I to, bool white)
+	{
+		Board newBoard = Clone();
+		newBoard.MakeMove(from, to);
+		return newBoard.IsInCheck(white);
+	}
+
+	public List<Vector2I> RemoveSelfChecks(Vector2I from, List<Vector2I> moves, bool white)
+	{
+		List<Vector2I> legalMoves = new();
+		foreach (var move in moves)
+		{
+			if (WouldBeInCheck(from, move, white))
+			{
+				continue;
+			}
+			legalMoves.Add(move);
+		}
+		return legalMoves;
 	}
 
 	public override void _Ready()
