@@ -111,7 +111,7 @@ public partial class Board : Sprite2D
 
 	private List<Vector2I> GetPawnLegalMoves(Vector2I cell, bool isWhite)
 	{
-		// TODO: en-passant
+		// TODO: en-passant & promotion
 		List<Vector2I> moves = new();
 
 		// First, check captures
@@ -222,6 +222,7 @@ public partial class Board : Sprite2D
 
 	private List<Vector2I> GetKingLegalMoves(Vector2I cell, bool isWhite)
 	{
+		// TODO: castling
 		List<Vector2I> moves = new();
 		// For the column before, same column, and column after...
 		for (int x = -1; x <= 1; x++)
