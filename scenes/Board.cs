@@ -199,20 +199,27 @@ public partial class Board : Sprite2D
 
 					void checkMove(Vector2I potentialMove)
 					{
+						// If the potential move is off the board
 						if (!IsInBoard(potentialMove))
 						{
+							// It and any subsequent moves are illegal
 							finished = true;
 							return;
 						}
+						// If the potential move is inside a piece...
 						if (GetPiece(potentialMove) is Piece blocker)
 						{
+							// If the piece is the opposite colour...
 							if (piece.isWhite != blocker.isWhite)
 							{
+								// We can take it
 								moves.Add(potentialMove);
 							}
+							// Either way, we can't move past that piece so we are done
 							finished = true;
 							return;
 						}
+						// If the potential move is an empty square, we can go there no issue
 						moves.Add(potentialMove);
 					}
 
