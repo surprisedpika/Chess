@@ -45,27 +45,38 @@ public partial class Board : Sprite2D
 		}
 	}
 
-	// Get the piece at a cell. If the cell is empty, return null
-	public Piece? GetPiece(Vector2I cell)
+
+	// Convert a grid coordinate to an index from 0-63
+	private static int GetIndexFromCell(Vector2I cell)
 	{
 		if (!IsInBoard(cell))
 		{
 			throw new IndexOutOfRangeException();
 		}
-		// Convert a grid coordinate to an index from 0-63
-		int index = cell.X + cell.Y * 8;
+		return cell.X + cell.Y * 8;
+	}
+
+	// Convert an index from 0-63 to a grid coordinate
+	private static Vector2I GetCellFromIndex(int index)
+	{
+		if (index < 0 || index > 63)
+		{
+			throw new IndexOutOfRangeException();
+		}
+		return new(index % 8, index / 8);
+	}
+
+	// Get the piece at a cell. If the cell is empty, return null
+	public Piece? GetPiece(Vector2I cell)
+	{
+		int index = GetIndexFromCell(cell);
 		return Pieces[index];
 	}
 
 	// Set a cell to a piece or null
 	public void SetCell(Vector2I cell, Piece? piece)
 	{
-		if (!IsInBoard(cell))
-		{
-			throw new IndexOutOfRangeException();
-		}
-		// Convert a grid coordinate to an index from 0-63
-		int index = cell.X + cell.Y * 8;
+		int index = GetIndexFromCell(cell);
 		Pieces[index] = piece;
 	}
 
@@ -86,6 +97,16 @@ public partial class Board : Sprite2D
 		SetCell(from, null);
 		// Place it at the new cell
 		SetCell(to, piece);
+
+		if (IsInCheck(true))
+		{
+			GD.Print("White is in check");
+		}
+
+		if (IsInCheck(false))
+		{
+			GD.Print("Black is in check");
+		}
 	}
 
 	private List<Vector2I> GetPawnLegalMoves(Vector2I cell, bool isWhite)
@@ -158,7 +179,7 @@ public partial class Board : Sprite2D
 	private List<Vector2I> GetKnightLegalMoves(Vector2I cell, bool isWhite)
 	{
 		List<Vector2I> moves = new();
-		List<Vector2I> potentialKnightMoves = new()
+		List<Vector2I> potentialMoves = new()
 				{
 					new Vector2I(cell.X - 1, cell.Y + 2),
 					new Vector2I(cell.X - 1, cell.Y - 2),
@@ -172,15 +193,15 @@ public partial class Board : Sprite2D
 					new Vector2I(cell.X + 2, cell.Y + 1),
 					new Vector2I(cell.X + 2, cell.Y - 1)
 				};
-		foreach (Vector2I potentialKnightMove in potentialKnightMoves)
+		foreach (Vector2I potentialMove in potentialMoves)
 		{
 			// The knight cannot move outside the board
-			if (!IsInBoard(potentialKnightMove))
+			if (!IsInBoard(potentialMove))
 			{
 				continue;
 			}
 			// Check if there is a piece where the knight is moving
-			if (GetPiece(potentialKnightMove) is Piece blocker)
+			if (GetPiece(potentialMove) is Piece blocker)
 			{
 				// If the pieces are the same colour, the move is illegal
 				if (isWhite == blocker.isWhite)
@@ -188,12 +209,12 @@ public partial class Board : Sprite2D
 					continue;
 				}
 				// If they are different colour, the knight can take the piece
-				moves.Add(potentialKnightMove);
+				moves.Add(potentialMove);
 			}
 			else
 			{
 				// The knight is free to move to an empty square
-				moves.Add(potentialKnightMove);
+				moves.Add(potentialMove);
 			}
 		}
 		return moves;
@@ -244,38 +265,46 @@ public partial class Board : Sprite2D
 		List<Vector2I> moves = new();
 		List<Vector2I> blockedDirections = new();
 
+		// For the size of the board
 		for (int i = 1; i <= 7; i++)
 		{
+			// For each direction the piece moves
 			foreach (Vector2I direction in directions)
 			{
+				// Don't move past a blockage (edge of board, piece)
 				if (blockedDirections.Contains(direction))
 				{
 					continue;
 				}
 
 				Vector2I potentialCell = cell + direction * i;
+				// If the next move is off the edge of the board, mark that direction as blocked
 				if (!IsInBoard(potentialCell))
 				{
 					blockedDirections.Add(direction);
 					continue;
 				}
 
+				// If the next move is into an empty cell, thats fine
 				if (GetPiece(potentialCell) is not Piece blocker)
 				{
 					moves.Add(potentialCell);
 					continue;
 				}
 
+				// If the next move is into a cell occupied by a piece of the same colour, that direction is blocked
 				if (blocker.isWhite == isWhite)
 				{
 					blockedDirections.Add(direction);
 					continue;
 				}
 
+				// The next cell is into a piece of the opposite colour, which we can take, but can't move further
 				moves.Add(potentialCell);
 				blockedDirections.Add(direction);
 			}
 
+			// If every direction is blocked, we are finished.
 			if (blockedDirections.Count == directions.Count)
 			{
 				return moves;
@@ -414,6 +443,140 @@ public partial class Board : Sprite2D
 
 		SetCell(new(7, 0), new(false, Type.Rook));
 		SetCell(new(7, 7), new(true, Type.Rook));
+	}
+
+	public bool IsInCheck(bool white)
+	{
+		// Find the king
+		var index = Pieces.FindIndex(p => p != null && p.Value.isWhite == white && p.Value.type == Type.King);
+		if (index == -1)
+		{
+			throw new Exception("King not found");
+		}
+		var pos = GetCellFromIndex(index);
+
+		// Check for knights
+		foreach (var move in GetKnightLegalMoves(pos, white))
+		{
+			if (GetPiece(move) is not Piece piece)
+			{
+				continue;
+			}
+			if (piece.type == Type.Knight)
+			{
+				return true;
+			}
+		}
+
+		// Check for bishops, rooks, queens
+
+		// Pretend the king is a queen
+		List<Vector2I> directions = new()
+		{
+			Vector2I.Up,
+			Vector2I.Down,
+			Vector2I.Left,
+			Vector2I.Right,
+			new(-1, -1), // Up left
+			new(-1, 1), // Up right
+			new(1, -1), // Down left
+			new(1, 1) // Down right
+		};
+
+		List<Vector2I> blockedDirections = new();
+
+		// Mostly reused from GetSlidingPieceLegalMoves
+		for (int i = 1; i <= 7; i++)
+		{
+			// For all 8 directions a queen can move
+			foreach (Vector2I direction in directions)
+			{
+				//
+				if (blockedDirections.Contains(direction))
+				{
+					continue;
+				}
+
+				Vector2I potentialCell = pos + direction * i;
+
+				if (!IsInBoard(potentialCell))
+				{
+					blockedDirections.Add(direction);
+					continue;
+				}
+
+				if (GetPiece(potentialCell) is not Piece piece)
+				{
+					continue;
+				}
+
+				blockedDirections.Add(direction);
+
+				if (piece.isWhite == white)
+				{
+					continue;
+				}
+
+				// If the piece is just one square away and a king (somehow)
+				if (i == 1 && piece.type == Type.King)
+				{
+					// We are in check
+					return true;
+				}
+
+				var directionAbs = direction.Abs();
+
+				// If a piece of the opposite colour is a rook's move away...
+				if (directionAbs.X == directionAbs.Y)
+				{
+					// If it's a rook or a queen...
+					if (piece.type == Type.Rook || piece.type == Type.Queen)
+					{
+						// We are in check
+						return true;
+					}
+					// Otherwise, that direction is blocked
+					blockedDirections.Add(direction);
+					continue;
+				}
+
+				// If a piece of the opposite colour is a bishop's move away...
+
+				// If it is a bishop or queen...
+				if (piece.type == Type.Bishop || piece.type == Type.Queen)
+				{
+					// We are in check
+					return true;
+				}
+
+				// If the piece is just one diagonal square away...
+				if (i == 1)
+				{
+					// And a pawn...
+					if (piece.type == Type.Pawn)
+					{
+						// And we are in front of it...
+						if (direction.Y == 1 == white)
+						{
+							// We are in check
+							return true;
+						}
+					}
+				}
+
+				// Otherwise, that direction is blocked
+				blockedDirections.Add(direction);
+			}
+			// If all directions are blocked and we haven't found a check...
+			if (blockedDirections.Count == directions.Count)
+			{
+				// We aren't in check
+				return false;
+			}
+		}
+
+		// If we exhaust all possible checks, we aren't in check.
+		return false;
 	}
 
 	public override void _Ready()
