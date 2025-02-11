@@ -255,14 +255,47 @@ public partial class Board : Sprite2D
 
 	private List<Vector2I> GetKingLegalMoves(Vector2I cell, bool isWhite)
 	{
-		throw new NotImplementedException();
+		List<Vector2I> moves = new();
+		// For the column before, same column, and column after...
+		for (int x = -1; x < 2; x++)
+		{
+			// For the row before, same row, and row after...
+			for (int y = -1; x < 2; x++)
+			{
+				Vector2I potentialMove = new(cell.X + x, cell.Y + y);
+				// Can't move to a square outside the board
+				if (!IsInBoard(potentialMove))
+				{
+					continue;
+				}
+				// Can't move to the square we already are
+				if (x == y && x == 0)
+				{
+					continue;
+				}
+				// If there is a piece in the square we are trying to move to...
+				if (GetPiece(potentialMove) is Piece piece)
+				{
+					// If the piece is the opposite colour to us, we can take it
+					if (piece.isWhite != isWhite)
+					{
+						moves.Add(potentialMove);
+					}
+					// If it's the same colour, we can't take it
+					continue;
+				}
+				// If the square we are trying to move to is empty, we can go there
+				moves.Add(potentialMove);
+			}
+		}
+		return moves;
 	}
 
 	// Return a list of legal moves for a given piece
 	public List<Vector2I> GetLegalMoves(Vector2I cell)
 	{
 		List<Vector2I> moves = new();
-		// If the piece is not a piece, return an empty list
+		// If the cell is empty, return an empty list
 		if (GetPiece(cell) is not Piece piece)
 		{
 			return moves;
