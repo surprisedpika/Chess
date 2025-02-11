@@ -90,10 +90,35 @@ public partial class Board : Sprite2D
 
 	private List<Vector2I> GetPawnLegalMoves(Vector2I cell, bool isWhite)
 	{
-		// TODO: Captures and en-passant
+		// TODO: en-passant
 		List<Vector2I> moves = new();
 
-		// First potential move is one cell forward
+		// First, check captures
+		List<Vector2I> potentialCaptures = new()
+		{
+			// Forward right
+			new(cell.X + 1, isWhite ? cell.Y - 1 : cell.Y + 1),
+			// Forward Left
+			new(cell.X - 1, isWhite ? cell.Y - 1 : cell.Y + 1),
+		};
+
+		foreach (var potentialCapture in potentialCaptures)
+		{
+			if (
+				// If the pawn is on the edge, can only capture one way
+				!IsInBoard(potentialCapture) ||
+				// Can't capture an empty cell
+				GetPiece(potentialCapture) is not Piece capturable ||
+				// Can't capture a piece of the same colour
+				capturable.isWhite == isWhite
+			)
+			{
+				continue;
+			}
+			moves.Add(potentialCapture);
+		}
+
+		// First normal potential move is one cell forward
 		Vector2I potentialMove = new(cell.X, isWhite ? cell.Y - 1 : cell.Y + 1);
 
 		// Can't move outside board and...
