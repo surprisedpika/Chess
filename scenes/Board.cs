@@ -183,67 +183,55 @@ public partial class Board : Sprite2D
 	private List<Vector2I> GetRookLegalMoves(Vector2I cell, bool isWhite)
 	{
 		List<Vector2I> moves = new();
-		var finished = false;
-
-		void checkMove(Vector2I potentialMove)
+		List<Vector2I> blockedDirections = new();
+		// For the length of the board...
+		for (int i = 1; i <= 7; i++)
 		{
-			// If the potential move is off the board
-			if (!IsInBoard(potentialMove))
+			// Both forward and backward...
+			foreach (int dir in new[] { -1, 1 })
 			{
-				// It and any subsequent moves are illegal
-				finished = true;
-				return;
-			}
-			// If the potential move is inside a piece...
-			if (GetPiece(potentialMove) is Piece blocker)
-			{
-				// If the piece is the opposite colour...
-				if (isWhite != blocker.isWhite)
+				// Both updown and leftright...
+				foreach (bool isVertical in new[] { false, true })
 				{
-					// We can take it
-					moves.Add(potentialMove);
+					Vector2I direction = isVertical ? new(0, dir) : new(dir, 0);
+					// If the direction is blocked, don't progress to next cell
+					if (blockedDirections.Contains(direction))
+					{
+						continue;
+					}
+					Vector2I potentialCell = cell + direction * i;
+					// If the next cell is outside the board, mark the direction as blocked
+					if (!IsInBoard(potentialCell))
+					{
+						blockedDirections.Add(direction);
+						continue;
+					}
+					// If the next cell is empty
+					if (GetPiece(potentialCell) is not Piece blocker)
+					{
+						// We can move there freely
+						moves.Add(potentialCell);
+						continue;
+					}
+					// If the next cell contains a piece the same colour as us
+					if (blocker.isWhite == isWhite)
+					{
+						// The direction is blocked (rooks can't jump over pieces)
+						blockedDirections.Add(direction);
+						continue;
+					}
+					// If the next cell contains a piece the opposite colour as us
+					// We can move there
+					moves.Add(potentialCell);
+					// But no further
+					blockedDirections.Add(direction);
+					continue;
 				}
-				// Either way, we can't move past that piece so we are done
-				finished = true;
-				return;
 			}
-			// If the potential move is an empty square, we can go there no issue
-			moves.Add(potentialMove);
-		}
-
-		// Check moves to the right
-		for (int i = cell.X + 1; i < Game.BoardSize; i++)
-		{
-			if (finished) continue;
-			Vector2I potentialMove = new(i, cell.Y);
-			checkMove(potentialMove);
-		}
-		finished = false;
-
-		// Check moves to the left
-		for (int i = cell.X - 1; i > 0; i--)
-		{
-			if (finished) continue;
-			Vector2I potentialMove = new(i, cell.Y);
-			checkMove(potentialMove);
-		}
-		finished = false;
-
-		// Check moves above
-		for (int i = cell.Y - 1; i > 0; i--)
-		{
-			if (finished) continue;
-			Vector2I potentialMove = new(cell.X, i);
-			checkMove(potentialMove);
-		}
-		finished = false;
-
-		// Check moves below
-		for (int i = cell.Y + 1; i < Game.BoardSize; i++)
-		{
-			if (finished) continue;
-			Vector2I potentialMove = new(cell.X, i);
-			checkMove(potentialMove);
+			if (blockedDirections.Count == 4)
+			{
+				return moves;
+			}
 		}
 		return moves;
 	}
@@ -256,10 +244,10 @@ public partial class Board : Sprite2D
 		for (int i = 1; i <= 7; i++)
 		{
 			// Both forward and backward
-			for (int x = -1; x <= 1; x += 2)
+			foreach (int x in new[] { -1, 1 })
 			{
 				// Both up and down
-				for (int y = -1; y <= 1; y += 2)
+				foreach (int y in new[] { -1, 1 })
 				{
 					Vector2I direction = new(x, y);
 					// If the direction is blocked, don't progress to next cell
@@ -295,6 +283,10 @@ public partial class Board : Sprite2D
 					blockedDirections.Add(direction);
 					continue;
 				}
+			}
+			if (blockedDirections.Count == 4)
+			{
+				return moves;
 			}
 		}
 		return moves;
