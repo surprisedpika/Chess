@@ -90,49 +90,43 @@ public partial class Board : Sprite2D
 
 	private List<Vector2I> GetPawnLegalMoves(Vector2I cell, bool isWhite)
 	{
+		// TODO: Captures and en-passant
 		List<Vector2I> moves = new();
-		Vector2I potentialPawnMove;
-		if (isWhite)
-		{
-			// First potential move is one move up (if white)
-			// 0,0 is at the top left of the board
-			potentialPawnMove = new(cell.X, cell.Y - 1);
-		}
-		else
-		{
-			// Or one move down (if black)
-			potentialPawnMove = new(cell.X, cell.Y + 1);
-		}
-		// Pawns cannot move into or through another piece
-		if (GetPiece(potentialPawnMove) is not null)
+
+		// First potential move is one cell forward
+		Vector2I potentialMove = new(cell.X, isWhite ? cell.Y - 1 : cell.Y + 1);
+
+		// Can't move outside board and...
+		// Can't move into or through another piece
+		if (!IsInBoard(potentialMove) || GetPiece(potentialMove) is not null)
 		{
 			return moves;
 		}
+
 		// Add the first move
-		moves.Add(potentialPawnMove);
+		moves.Add(potentialMove);
 
 		// If the pawn hasn't moved, it can move 2 squares
 		// This logic comes after as the pawn can only move 2 squares in a subset of the cases it can move 1 square
-		if (isWhite && cell.Y == 6)
+
+		if ((isWhite && cell.Y == 6) || (!isWhite && cell.Y == 1))
 		{
-			potentialPawnMove = new(cell.X, cell.Y - 2);
-		}
-		else if (!isWhite && cell.Y == 1)
-		{
-			potentialPawnMove = new(cell.X, cell.Y + 2);
+			potentialMove = new(cell.X, isWhite ? cell.Y - 2 : cell.Y + 2);
 		}
 		else
 		{
 			// Otherwise, there are no more legal moves
 			return moves;
 		}
-		if (GetPiece(potentialPawnMove) is not null)
+
+		// Can't move into or through another piece
+		if (GetPiece(potentialMove) is not null)
 		{
 			// Pawns can't move into another piece
 			return moves;
 		}
 		// Add the second move
-		moves.Add(potentialPawnMove);
+		moves.Add(potentialMove);
 		return moves;
 	}
 
@@ -280,7 +274,6 @@ public partial class Board : Sprite2D
 			//TODO: Checks and checkmates
 			case Type.Pawn:
 				{
-					// TODO: Captures and en-passant
 					GD.Print("Pawn Selected");
 					moves.AddRange(GetPawnLegalMoves(cell, piece.isWhite));
 					break;
