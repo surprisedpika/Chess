@@ -97,16 +97,6 @@ public partial class Board : Sprite2D
 		SetCell(from, null);
 		// Place it at the new cell
 		SetCell(to, piece);
-
-		if (IsInCheck(true))
-		{
-			GD.Print("White is in check");
-		}
-
-		if (IsInCheck(false))
-		{
-			GD.Print("Black is in check");
-		}
 	}
 
 	private List<Vector2I> GetPawnLegalMoves(Vector2I cell, bool isWhite)
@@ -231,7 +221,6 @@ public partial class Board : Sprite2D
 			for (int y = -1; y <= 1; y++)
 			{
 				Vector2I potentialMove = new(cell.X + x, cell.Y + y);
-				GD.Print(potentialMove);
 				// Can't move to a square outside the board
 				if (!IsInBoard(potentialMove))
 				{
@@ -391,7 +380,8 @@ public partial class Board : Sprite2D
 			default:
 				throw new Exception("Unknown piece type found!");
 		}
-		return RemoveSelfChecks(cell, moves, piece.isWhite);
+		var legalMoves = RemoveSelfChecks(cell, moves, piece.isWhite);
+		return legalMoves;
 	}
 
 	// Checks a cell is inside a board
@@ -492,7 +482,7 @@ public partial class Board : Sprite2D
 			// For all 8 directions a queen can move
 			foreach (Vector2I direction in directions)
 			{
-				//
+				// If the direction is blocked, we can't move any further
 				if (blockedDirections.Contains(direction))
 				{
 					continue;
@@ -500,19 +490,23 @@ public partial class Board : Sprite2D
 
 				Vector2I potentialCell = pos + direction * i;
 
+				// If the cell is outside the board, the direction is blocked
 				if (!IsInBoard(potentialCell))
 				{
 					blockedDirections.Add(direction);
 					continue;
 				}
 
+				// If the cell is empty, it's definitely not checking us
 				if (GetPiece(potentialCell) is not Piece piece)
 				{
 					continue;
 				}
 
+				// If the cell has a piece, we can't be checked by a piece behind it
 				blockedDirections.Add(direction);
 
+				// A piece that is our colour can't check us
 				if (piece.isWhite == white)
 				{
 					continue;
@@ -527,8 +521,8 @@ public partial class Board : Sprite2D
 
 				var directionAbs = direction.Abs();
 
-				// If a piece of the opposite colour is a rook's move away...
-				if (directionAbs.X == directionAbs.Y)
+				// If the piece is a rook's move away...
+				if (directionAbs.X != directionAbs.Y)
 				{
 					// If it's a rook or a queen...
 					if (piece.type == Type.Rook || piece.type == Type.Queen)
