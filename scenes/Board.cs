@@ -219,10 +219,7 @@ public partial class Board : Sprite2D
 					// Check moves to the right
 					for (int i = cell.X + 1; i < Game.BoardSize; i++)
 					{
-						if (finished)
-						{
-							continue;
-						}
+						if (finished) continue;
 						Vector2I potentialMove = new(i, cell.Y);
 						checkMove(potentialMove);
 					}
@@ -231,10 +228,7 @@ public partial class Board : Sprite2D
 					// Check moves to the left
 					for (int i = cell.X - 1; i > 0; i--)
 					{
-						if (finished)
-						{
-							continue;
-						}
+						if (finished) continue;
 						Vector2I potentialMove = new(i, cell.Y);
 						checkMove(potentialMove);
 					}
@@ -243,10 +237,7 @@ public partial class Board : Sprite2D
 					// Check moves above
 					for (int i = cell.Y - 1; i > 0; i--)
 					{
-						if (finished)
-						{
-							continue;
-						}
+						if (finished) continue;
 						Vector2I potentialMove = new(cell.X, i);
 						checkMove(potentialMove);
 					}
@@ -255,15 +246,10 @@ public partial class Board : Sprite2D
 					// Check moves below
 					for (int i = cell.Y + 1; i < Game.BoardSize; i++)
 					{
-						if (finished)
-						{
-							continue;
-						}
+						if (finished) continue;
 						Vector2I potentialMove = new(cell.X, i);
 						checkMove(potentialMove);
 					}
-					finished = false;
-
 					break;
 				}
 			default:
